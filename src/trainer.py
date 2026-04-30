@@ -96,6 +96,7 @@ class Trainer:
         global_step = 0
         micro_step = 0
         seen_examples = 0
+        step_tokens = 0
 
         accumulated_loss = torch.tensor(0.0, device=self.device)
         dataloader_iterator = iter(self.train_dataloader)
@@ -117,6 +118,11 @@ class Trainer:
             current_batch_size = len(next(iter(batch.values())))
             seen_examples += current_batch_size
 
+            if "attention_mask" in batch:
+                step_tokens += int(batch["attention_mask"].sum().item())
+            elif "input_ids" in batch:
+                step_tokens += batch["input_ids"].numel()
+
             loss = self.training_step(batch)
 
             accumulated_loss += loss.detach()
@@ -135,10 +141,12 @@ class Trainer:
                     hw_metrics=hw_metrics,
                     step=global_step,
                     seen_examples=seen_examples,
+                    step_tokens=step_tokens,
                 )
 
                 self._log_step(metrics, step=global_step)
 
+                step_tokens = 0
                 accumulated_loss.zero_()
                 self.hw_monitor.reset()
 
@@ -148,21 +156,32 @@ class Trainer:
         hw_metrics: dict[str, float],
         step: int,
         seen_examples: int,
+        step_tokens: int,
     ) -> dict[str, Any]:
-        lr = self.scheduler.get_last_lr()[0]
 
         metrics: dict[str, Any] = {
             "train_loss": round(loss.item(), 6),
-            "learning_rate": lr,
             "seen_examples": seen_examples,
+            "step_tokens": step_tokens,
             **hw_metrics,
         }
 
-        if hw_metrics.get("step_time_sec", 0) > 0:
-            metrics["throughput_steps_per_sec"] = round(
-                1.0 / hw_metrics["step_time_sec"], 2
-            )
+        # collect unique LR values
+        unique_lrs = sorted(
+            list(set(group["lr"] for group in self.optimizer.param_groups)),
+            reverse=True,
+        )
 
+        if len(unique_lrs) == 1:
+            metrics["learning_rate"] = unique_lrs[0]
+        else:
+            for i, lr in enumerate(unique_lrs):
+                metrics[f"learning_rate_{i}"] = lr
+
+        if hw_metrics.get("step_time_sec", 0) > 0:
+            step_time = hw_metrics["step_time_sec"]
+            metrics["throughput_steps_per_sec"] = round(1.0 / step_time, 2)
+            metrics["throughput_tokens_per_sec"] = round(step_tokens / step_time)
         return metrics
 
     def _log_step(
@@ -173,12 +192,18 @@ class Trainer:
         """Log metrics"""
         self.metrics_logger.log(metrics, step=step)
 
+        lr_keys = sorted([k for k in metrics.keys() if k.startswith("learning_rate")])
+        lr_str = " | ".join(
+            f"{k.replace('learning_rate', 'lr')}={metrics[k]:.2e}" for k in lr_keys
+        )
+
         logger.info(
-            "step=%d | loss=%.4f | lr=%.2e | step_time=%.3fs | "
+            "step=%d | samples=%d | loss=%.4f | %s | step_time=%.3fs | "
             "peak_mem=%.0fMB | gpu_util=%.1f%%",
             step,
+            metrics.get("seen_examples", 0),
             metrics.get("train_loss", float("nan")),
-            metrics.get("learning_rate", float("nan")),
+            lr_str,
             metrics.get("step_time_sec", 0.0),
             metrics.get("gpu_peak_memory_mb", 0.0),
             metrics.get("gpu_utilization_pct", 0.0),
