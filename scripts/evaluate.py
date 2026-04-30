@@ -30,8 +30,9 @@ def main(args):
             raise FileNotFoundError(
                 f"Checkpoint path does not exist: {checkpoint_path}"
             )
+        model_name_or_path = str(checkpoint_path)
+        eval_path = checkpoint_path / "evaluation"
 
-    eval_path = checkpoint_path / "evaluation"
     eval_path.mkdir(parents=True, exist_ok=True)
 
     logger = setup_logger(eval_path)
