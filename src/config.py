@@ -45,7 +45,7 @@ class HybridOptimizerConfig(BaseModel):
 
 
 OptimizerConfig = Annotated[
-    AdamWConfig | MoonlightMuonConfig,
+    AdamWConfig | MoonlightMuonConfig | HybridOptimizerConfig,
     Field(discriminator="type"),
 ]
 
