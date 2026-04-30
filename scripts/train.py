@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 import yaml
-from transformers import get_constant_schedule_with_warmup
+from transformers import get_cosine_schedule_with_warmup
 
 from src.build_optimizer import build_optimizer
 from src.config import Config
@@ -52,8 +52,10 @@ def main(args):
         shuffle=True,
     )
 
-    scheduler = get_constant_schedule_with_warmup(
-        optimizer, num_warmup_steps=config.training.num_warmup_steps
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer,
+        num_warmup_steps=config.training.num_warmup_steps,
+        num_training_steps=config.training.num_steps,
     )
 
     metrics_logger = MetricsLogger(experiment_path)

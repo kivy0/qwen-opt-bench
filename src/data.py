@@ -40,23 +40,43 @@ def get_dataloader(
     )
 
 
-def prepare_dataset(hf_dataset_name: str, tokenizer, max_length: int = 512):
+def prepare_dataset(hf_dataset_name: str, tokenizer, max_length: int = 1024):
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     logger.info(f"Loading dataset {hf_dataset_name}...")
     dataset = load_dataset(hf_dataset_name, split="train")
 
     def tokenize_fn(examples):
-        return tokenizer(
-            examples["text"],
-            truncation=True,
-            max_length=max_length,
-            padding="max_length",
-        )
+        return tokenizer(examples["text"])
 
-    logger.info(f"Tokenizing dataset (max_length={max_length})...")
+    logger.info("Tokenizing without padding...")
     tokenized = dataset.map(
-        tokenize_fn, batched=True, remove_columns=dataset.column_names
+        tokenize_fn,
+        batched=True,
+        remove_columns=dataset.column_names,
+        desc="Tokenizing",
     )
+
+    def group_texts(examples):
+        concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
+        total_length = len(concatenated_examples[list(examples.keys())[0]])
+
+        total_length = (total_length // max_length) * max_length
+
+        result = {
+            k: [t[i : i + max_length] for i in range(0, total_length, max_length)]
+            for k, t in concatenated_examples.items()
+        }
+
+        result["labels"] = result["input_ids"].copy()
+        return result
+
+    logger.info(f"Grouping texts into chunks of {max_length}...")
+    chunked = tokenized.map(group_texts, batched=True, desc="Chunking")
+
     logger.info("Formatting dataset to PyTorch tensors...")
-    tokenized.set_format("torch")
+    chunked.set_format("torch")
     logger.info("Done.")
-    return tokenized
+    return chunked
