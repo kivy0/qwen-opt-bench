@@ -29,6 +29,9 @@ dev = [
 [tool.uv.extra-build-dependencies]
 flash-attn = ["torch"]
 
+[project.optional-dependencies]
+cuda = ["flash-attn"]
+
 
 [tool.mypy]
 strict = true
