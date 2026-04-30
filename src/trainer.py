@@ -26,7 +26,7 @@ class Trainer:
         use_backward: bool = True,
         device: str = "cpu",
     ) -> None:
-        self.model = model
+        self.model = model.to(self.device)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.train_dataloader = train_dataloader
