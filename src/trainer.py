@@ -26,6 +26,7 @@ class Trainer:
         use_backward: bool = True,
         device: str = "cpu",
     ) -> None:
+        self.device = device
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.scheduler = scheduler
@@ -36,7 +37,6 @@ class Trainer:
         self.max_grad_norm = max_grad_norm
         self.use_backward = use_backward
 
-        self.device = device
         self.use_amp = fp16 or bf16
         self.amp_dtype = torch.bfloat16 if bf16 else torch.float16
         self.scaler = torch.amp.GradScaler(
