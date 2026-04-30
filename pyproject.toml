@@ -1,0 +1,49 @@
+[project]
+name = "qwen-opt-bench"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "datasets>=4.8.4",
+    "gputil>=1.4.0",
+    "httpx[socks]>=0.28.1",
+    "ipykernel>=7.2.0",
+    "jupyter>=1.1.1",
+    "lm-eval>=0.4.11",
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.4",
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.0",
+    "pyyaml>=6.0.3",
+    "torch>=2.11.0",
+    "transformers>=5.6.2",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.2",
+    "pylint>=4.0.5",
+]
+
+[tool.uv.extra-build-dependencies]
+flash-attn = ["torch"]
+
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[tool.pylint.MASTER]
+disable = [
+    "C0114",  # missing-module-docstring
+    "C0115",  # missing-class-docstring
+    "C0116",  # missing-function-docstring
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
