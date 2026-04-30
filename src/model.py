@@ -30,7 +30,7 @@ def build_tokenizer(name_or_path: str) -> PreTrainedTokenizerBase:
 def build_model(
     name_or_path: str,
     dtype: str = "bfloat16",
-    attn_implementation: str | None = "flash_attention_2",
+    attn_implementation: str | None = "sdpa",
     gradient_checkpointing: bool = False,
 ) -> PreTrainedModel:
     logger.info("Loading model...")

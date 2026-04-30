@@ -10,7 +10,7 @@ dataset:
 model:
   name_or_path: "Qwen/Qwen2.5-0.5B"
   dtype: "bfloat16"
-  attn_implementation: "flash_attention_2"
+  attn_implementation: "sdpa" #"flash_attention_2"
   gradient_checkpointing: true
 
 training:

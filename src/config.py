@@ -58,7 +58,7 @@ class DatasetConfig(BaseModel):
 class ModelConfig(BaseModel):
     name_or_path: str = "Qwen/Qwen2.5-0.5B"
     dtype: str = "bfloat16"
-    attn_implementation: str = "flash_attention_2"
+    attn_implementation: str = "sdpa"
     gradient_checkpointing: bool = True
 
 
