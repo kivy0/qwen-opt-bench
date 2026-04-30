@@ -55,15 +55,16 @@ class HardwareMonitor:
     """
 
     def __init__(self, device: str) -> None:
-        self.device = device
-        self.is_cuda = device == "cuda"
+        self.torch_device = torch.device(device)
+        self.device_str = device
+        self.is_cuda = self.torch_device.type == "cuda"
         self._step_start_time: float = 0.0
 
     def reset(self) -> None:
         """Call at the beginning of each step."""
         if self.is_cuda:
-            torch.cuda.reset_peak_memory_stats(self.device)
-            torch.cuda.synchronize(self.device)
+            torch.cuda.reset_peak_memory_stats(self.torch_device)
+            torch.cuda.synchronize(self.torch_device)
 
         self._step_start_time = time.perf_counter()
 
@@ -73,7 +74,7 @@ class HardwareMonitor:
         Returns a dictionary with hardware metrics.
         """
         if self.is_cuda:
-            torch.cuda.synchronize(self.device)
+            torch.cuda.synchronize(self.torch_device)
 
         step_time = time.perf_counter() - self._step_start_time
         metrics: dict[str, float] = {"step_time_sec": round(step_time, 4)}
@@ -87,10 +88,12 @@ class HardwareMonitor:
 
     def _collect_cuda_metrics(self) -> dict[str, float]:
         """Memory metrics via torch.cuda."""
-        device_idx = self.device.index or 0
+        device_idx = (
+            self.torch_device.index if self.torch_device.index is not None else 0
+        )
 
-        peak_memory_mb = torch.cuda.max_memory_allocated(self.device) / 1024**2
-        reserved_memory_mb = torch.cuda.memory_reserved(self.device) / 1024**2
+        peak_memory_mb = torch.cuda.max_memory_allocated(self.torch_device) / 1024**2
+        reserved_memory_mb = torch.cuda.memory_reserved(self.torch_device) / 1024**2
         total_memory_mb = (
             torch.cuda.get_device_properties(device_idx).total_memory / 1024**2
         )
@@ -106,7 +109,9 @@ class HardwareMonitor:
 
     def _collect_gputil_metrics(self) -> dict[str, float]:
         """GPU utilization via GPUtil."""
-        device_idx = self.device.index or 0
+        device_idx = (
+            self.torch_device.index if self.torch_device.index is not None else 0
+        )
 
         gpus = GPUtil.getGPUs()
         if not gpus or device_idx >= len(gpus):
