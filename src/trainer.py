@@ -40,14 +40,14 @@ class Trainer:
         self.use_amp = fp16 or bf16
         self.amp_dtype = torch.bfloat16 if bf16 else torch.float16
         self.scaler = torch.amp.GradScaler(
-            enabled=fp16 and self.device.type == "cuda",
+            enabled=fp16 and self.device == "cuda",
         )
         self.hw_monitor = HardwareMonitor(self.device)
 
     def forward(self, batch: dict[str, Any]) -> torch.Tensor:
         """Perform forward pass and return loss."""
         with torch.amp.autocast(
-            device_type=self.device.type,
+            device_type=self.device,
             dtype=self.amp_dtype,
             enabled=self.use_amp,
         ):
