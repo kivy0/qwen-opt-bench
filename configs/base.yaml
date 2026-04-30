@@ -17,7 +17,7 @@ training:
   num_steps: 1500
   batch_size: 8
   grad_accum_steps: 8
-  num_warmup_steps: 150
+  num_warmup_steps: 50
   device: cuda
 
 evaluation:
@@ -36,9 +36,9 @@ evaluation:
 
 optimizer:
   type: adamw
-  lr: 2e-5
-  betas: [0.9, 0.95]
-  eps: 1e-6
+  lr: 5e-5
+  betas: [0.9, 0.999]
+  eps: 1e-8
   weight_decay: 1e-2
   amsgrad: false
   maximize: false
