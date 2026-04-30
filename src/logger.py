@@ -54,9 +54,9 @@ class HardwareMonitor:
     Collect GPU/CPU metrics on train.
     """
 
-    def __init__(self, device: torch.device) -> None:
+    def __init__(self, device: str) -> None:
         self.device = device
-        self.is_cuda = device.type == "cuda"
+        self.is_cuda = device == "cuda"
         self._step_start_time: float = 0.0
 
     def reset(self) -> None:
