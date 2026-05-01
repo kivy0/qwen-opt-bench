@@ -21,3 +21,6 @@ runs/*
 report/report.out
 report/report.log
 report/report.synctex.gz
+report/report.fls
+report/report.fdb_latexmk
+report/report.aux
