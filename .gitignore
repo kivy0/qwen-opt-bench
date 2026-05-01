@@ -15,4 +15,9 @@ temp.md
 # Linter cache
 .mypy_cache
 
-report
+runs/*
+
+# Report
+report/report.out
+report/report.log
+report/report.synctex.gz

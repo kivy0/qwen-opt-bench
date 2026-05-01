@@ -5,7 +5,7 @@ optimizer:
   muon_layers_limit: 12
 
   muon:
-    lr: 0.002
+    lr: 0.0002
     momentum: 0.95
     nesterov: true
     weight_decay: 0.01
